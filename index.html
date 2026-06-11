@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>環境チェックツール</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            color: #1a202c;
+            margin-bottom: 30px;
+        }
+        .step-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .step-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #2b6cb0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .badge.success { background-color: #48bb78; }
+        .badge.danger { background-color: #e53e3e; }
+        .badge.warning { background-color: #ecc94b; color: #744210; }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-yes { background-color: #4299e1; color: white; }
+        .btn-yes:hover { background-color: #3182ce; }
+        .btn-no { background-color: #cbd5e0; color: #4a5568; }
+        .btn-no:hover { background-color: #a0aec0; }
+        
+        .btn-active { ring: 3px solid #3182ce; opacity: 0.6; }
+
+        .link-btn {
+            display: inline-block;
+            background-color: #4a5568;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .link-btn:hover { background-color: #2d3748; }
+
+        #result-box {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            display: none;
+        }
+        .result-pass { background-color: #c6f6d5; color: #22543d; border: 2px solid #48bb78; }
+        .result-fail { background-color: #fed7d7; color: #742a2a; border: 2px solid #e53e3e; }
+        
+        .instruction {
+            font-size: 13px;
+            color: #4a5568;
+            margin-top: 8px;
+            line-height: 1.5;
+            background: #fff;
+            padding: 10px;
+            border-left: 4px solid #cbd5e0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>単位認定試験アプリ_推奨PC環境チェック</h1>
+
+    <div class="step-box">
+        <div class="step-title">ステップ1：システム自動判定</div>
+        <p>OS/ブラウザ: <span id="auto-check-status">判定中...</span></p>
+        <div id="auto-check-detail" style="font-size: 14px; color: #666;"></div>
+    </div>
+
+    <div class="step-box">
+        <div class="step-title">ステップ2：PC本体のスペック確認</div>
+        <p>あなたのPCは、以下の条件を満たしていますか？</p>
+        
+        <div id="spec-instruction-win" class="instruction" style="display:none;">
+            <strong>【Windowsの確認方法】</strong><br>
+            キーボードの <strong>[Ctrl] + [Shift] + [Esc]</strong> を同時に押し、「パフォーマンス」タブを開いて確認してください。<br>
+            ・CPUが「Core i5-12xxx（第12世代）」以降、または「Ryzen 5」以降<br>
+            ・メモリが「8GB」以上<br>
+            ・ディスクが「SSD 256GB」以上
+        </div>
+        <div id="spec-instruction-mac" class="instruction" style="display:none;">
+            <strong>【Macの確認方法】</strong><br>
+            画面左上の <strong>[（アップルマーク）] ➔ [このMacについて]</strong> をクリックして確認してください。<br>
+            ・チップ（CPU）が「Apple M1」以降<br>
+            ・メモリ（メモリ）が「8GB」以上<br>
+            ・ストレージ（SSD）が「256GB」以上
+        </div>
+        <div id="spec-instruction-unknown" class="instruction">
+            お使いのOSは推奨環境対象外（Windows11以降、またはMac OS Ventura以降が必要）の可能性があります。
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-yes" id="btn-spec-yes" onclick="setStepResult('spec', true)">はい（満たしている）</button>
+            <button class="btn-no" id="btn-spec-no" onclick="setStepResult('spec', false)">いいえ</button>
+        </div>
+    </div>
+
+    <div class="step-box">
+        <div class="step-title">ステップ3：回線速度の確認</div>
+        <p>下記のボタンを押して別サイトで速度を測定し、推奨速度を満たしているか選んでください。</p>
+        <a href="https://speedtest.gate02.ne.jp/" target="_blank" class="link-btn">速度テストサイトを開く ↗</a>
+        
+        <div class="instruction">
+            ※別タブで開いたページで「START」を押し、測定を完了させてください。<br>
+            <strong>【判定基準】</strong>DL：15Mbps以上／UL10Mbps以上の数値は出ていますか？
+        </div>
+
+        <div class="btn-group">
+            <button class="btn-yes" id="btn-speed-yes" onclick="setStepResult('speed', true)">はい（十分な速度が出た）</button>
+            <button class="btn-no" id="btn-speed-no" onclick="setStepResult('speed', false)">いいえ（速度が遅い）</button>
+        </div>
+    </div>
+
+    <div id="result-box"></div>
+</div>
+
+<script>
+    // 状態管理
+    let isAutoPass = false;
+    let isSpecPass = null;
+    let isSpeedPass = null;
+
+    // ページ読み込み時に自動判定を実行
+    window.onload = function() {
+        const ua = navigator.userAgent.toLowerCase();
+        let os = "Unknown";
+        let isChrome = false;
+        
+        // 簡単なOS判定
+        if (ua.indexOf("windows nt") !== -1)  os = "Windows";
+        if (ua.indexOf("mac os x") !== -1 && ua.indexOf("iphone") === -1 && ua.indexOf("ipad") === -1) os = "Mac";
+        if (ua.indexOf("cros") !== -1) os = "ChromeOS";
+
+        // Chrome判定 (EdgeやOperaを排除)
+        if (ua.indexOf("chrome") !== -1 && ua.indexOf("edg") === -1 && ua.indexOf("opr") === -1) {
+            isChrome = true;
+        }
+
+        const statusEl = document.getElementById("auto-check-status");
+        const detailEl = document.getElementById("auto-check-detail");
+
+        // 表示切り替え
+        if (os === "Windows") {
+            document.getElementById("spec-instruction-win").style.display = "block";
+            document.getElementById("spec-instruction-unknown").style.display = "none";
+        } else if (os === "Mac") {
+            document.getElementById("spec-instruction-mac").style.display = "block";
+            document.getElementById("spec-instruction-unknown").style.display = "none";
+        }
+
+        // 推奨OSかつChromeの場合のみ自動判定パス
+        if ((os === "Windows" || os === "Mac") && isChrome) {
+            statusEl.innerHTML = '<span class="badge success">判定クリア</span>';
+            detailEl.innerHTML = `検知された環境: ${os} / Google Chrome`;
+            isAutoPass = true;
+        } else {
+            statusEl.innerHTML = '<span class="badge danger">不適合</span>';
+            let errorMsg = `現在の環境: ${os === "Unknown" ? "不明なOS/スマホ" : os} / ${isChrome ? "Chrome" : "他ブラウザ"}<br>`;
+            errorMsg += '<strong style="color:#e53e3e;">※必ず「WindowsまたはMac」の「Google Chrome」でこのページを開いてください。</strong>';
+            detailEl.innerHTML = errorMsg;
+            isAutoPass = false;
+        }
+        
+        updateFinalResult();
+    };
+
+    // ボタンが押された時の処理
+    function setStepResult(type, isPass) {
+        if (type === 'spec') {
+            isSpecPass = isPass;
+            toggleButtonActive('btn-spec-yes', 'btn-spec-no', isPass);
+        } else if (type === 'speed') {
+            isSpeedPass = isPass;
+            toggleButtonActive('btn-speed-yes', 'btn-speed-no', isPass);
+        }
+        updateFinalResult();
+    }
+
+    // ボタンの見た目の切り替え
+    function toggleButtonActive(yesId, noId, isPass) {
+        const yesBtn = document.getElementById(yesId);
+        const noBtn = document.getElementById(noId);
+        if (isPass) {
+            yesBtn.style.opacity = "1";
+            yesBtn.style.border = "3px solid #1a202c";
+            noBtn.style.opacity = "0.4";
+            noBtn.style.border = "none";
+        } else {
+            noBtn.style.opacity = "1";
+            noBtn.style.border = "3px solid #1a202c";
+            yesBtn.style.opacity = "0.4";
+            yesBtn.style.border = "none";
+        }
+    }
+
+    // 最終判定の更新
+    function updateFinalResult() {
+        const resultBox = document.getElementById("result-box");
+        
+        // まだ選択していない項目がある場合
+        if (isSpecPass === null || isSpeedPass === null) {
+            resultBox.style.display = "block";
+            resultBox.className = "result-fail";
+            resultBox.style.backgroundColor = "#edf2f7";
+            resultBox.style.color = "#4a5568";
+            resultBox.style.border = "2px solid #cbd5e0";
+            resultBox.innerText = "すべてのステップを確認してください。";
+            return;
+        }
+
+        // すべての条件を満たしているか
+        if (isAutoPass && isSpecPass && isSpeedPass) {
+            resultBox.style.display = "block";
+            resultBox.className = "result-pass";
+            resultBox.innerHTML = "🎉 推奨PC環境を満たしています！<br>このあと、試験期間の確認や室内環境、スマホカメラ設定も行い、万全の状態で試験を迎えましょう！";
+        } else {
+            resultBox.style.display = "block";
+            resultBox.className = "result-fail";
+            resultBox.innerHTML = "❌ 推奨環境を満たしていません<br><span style='font-size:14px; font-weight:normal;'>お使いのOS、ブラウザ、PCスペック、または通信速度が基準に達していない可能性があります。</span>";
+        }
+    }
+</script>
+
+</body>
+</html>
